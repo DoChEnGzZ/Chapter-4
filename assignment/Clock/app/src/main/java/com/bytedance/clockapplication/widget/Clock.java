@@ -10,6 +10,8 @@ import android.view.View;
 
 import java.util.Calendar;
 import java.util.Date;
+import android.os.Handler;
+import java.util.logging.LogRecord;
 
 public class Clock extends View {
 
@@ -41,7 +43,15 @@ public class Clock extends View {
     private int degreesColor;
 
     private Paint mNeedlePaint;
-
+    //新建handler和Runnable
+    private Handler handler =new Handler();
+    Runnable runnable=new Runnable() {
+        @Override
+        public void run() {
+            //调用invalidate方法重绘
+            invalidate();
+        }
+    };
     public Clock(Context context) {
         super(context);
         init(context, null);
@@ -106,6 +116,10 @@ public class Clock extends View {
         drawNeedles(canvas);
 
         // todo 每一秒刷新一次，让指针动起来
+        //1.1使用postInvalidateDelayed，View封装好的方法。
+        //postInvalidateDelayed(1000);
+        //1.2 自己新建handler传递runnable，其中run中有invalidate重绘方法
+        handler.postDelayed(runnable,1000);
 
     }
 
@@ -167,6 +181,9 @@ public class Clock extends View {
         drawPointer(canvas, 2, nowSeconds);
         // 画分针
         // todo 画分针
+        //sec_part是当前秒数对分钟角度的影响，单位是一小格的度数
+        int sec_part=nowSeconds/60;
+        drawPointer(canvas,1,nowMinutes+sec_part);
         // 画时针
         int part = nowMinutes / 12;
         drawPointer(canvas, 0, 5 * nowHours + part);
@@ -189,7 +206,9 @@ public class Clock extends View {
                 break;
             case 1:
                 // todo 画分针，设置分针的颜色
-
+                degree=value*UNIT_DEGREE;
+                mNeedlePaint.setColor(Color.RED);
+                pointerHeadXY=getPointerHeadXY(MINUTE_POINTER_LENGTH,degree);
                 break;
             case 2:
                 degree = value * UNIT_DEGREE;
